@@ -1,6 +1,8 @@
 #
 # 版权所有.(c)2008-2017. 卡尔科技工作室
 #
+base:
+  url: test.liukx.com
 spring:
   application:
     name: cas-management
@@ -26,5 +28,5 @@ spring:
   profiles: dev
   cloud:
     config:
-      uri: http://localhost:8888/config
+      uri: http://${base.url}:8888/config
 ---

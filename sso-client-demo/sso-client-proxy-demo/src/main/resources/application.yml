@@ -1,3 +1,5 @@
+base:
+  url: test.liukx.com
 logging:
   file: "logs/sso-demo-proxy.log"
 info:

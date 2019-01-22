@@ -1,4 +1,6 @@
 #必须指定配置文件，否则监控系统无法获取
+base:
+  url: test.liukx.com
 logging:
   file: "logs/monitor/monitor-server.log"
 info:
@@ -20,7 +22,7 @@ spring:
   profiles: dev
   boot:
     admin:
-      url: http://localhost:8444/
+      url: http://${base.url}:8444/
       client:
         management-base-url: ${spring.boot.admin.url}
         management-url: ${spring.boot.admin.url}

@@ -1,3 +1,5 @@
+base:
+  url: test.liukx.com
 spring:
   application:
     name: shiro-client
