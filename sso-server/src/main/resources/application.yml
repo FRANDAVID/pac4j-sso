@@ -1,0 +1,120 @@
+#公共配置
+#暂时转移部分
+env: test
+---
+spring:
+  profiles: dev
+
+#Query Database Authentication 数据库查询校验用户名开始
+#查询账号密码sql，必须包含密码字段
+cas:
+  authn:
+    jdbc:
+      query[0]:
+        sql: select * from sys_user where username=?
+#指定上面的sql查询字段名（必须）
+        fieldPassword: password
+#指定过期字段，1为过期，若过期不可用
+        fieldExpired: expired
+#为不可用字段段，1为不可用，需要修改密码
+        fieldDisabled: disabled
+#数据库方言hibernate的知识
+        dialect: org.hibernate.dialect.HSQLDialect
+#数据库驱动
+        driverClass: org.hsqldb.jdbcDriver
+#数据库连接
+        url: jdbc:hsqldb:mem:cas-hsql-database
+#数据库用户名
+        user: sa
+#数据库密码
+        password:
+#默认加密策略，通过encodingAlgorithm来指定算法，默认NONE不加密
+        passwordEncoder:
+          type: DEFAULT
+#cas.authn.jdbc.query[0].passwordEncoder.type=org.springframework.security.authentication.encoding.Md5PasswordEncoder
+        characterEncoding: UTF-8
+        encodingAlgorithm: MD5
+#Query Database Authentication 数据库查询校验用户名结束
+
+#Encode Database Authentication 开始
+#加密次数
+      encode[0]:
+        numberOfIterations: 2
+#该列名的值可替代上面的值，但对密码加密时必须取该值进行处理
+        numberOfIterationsFieldName:
+# 盐值固定列
+        saltFieldName: username
+#静态盐值
+        staticSalt: .
+        sql: select * from sys_user_encode where username=?
+#对处理盐值后的算法
+        algorithmName: MD5
+        passwordFieldName: password
+        expiredFieldName: expired
+        disabledFieldName: disabled
+        url: jdbc:hsqldb:mem:cas-hsql-database
+        dialect: org.hibernate.dialect.HSQLDialect
+        user: sa
+        password:
+        driverClass: org.hsqldb.jdbcDriver
+#Encode Database Authentication 结束
+---
+spring:
+  profiles: liukx
+  datasource:
+    url: ${datasource.url}
+    username: ${datasource.user}
+    password: ${datasource.password}
+    driver-class-name: com.mysql.jdbc.Driver
+#mysql jdbc配置
+cas:
+  authn:
+    jdbc:
+      query[0]:
+        sql: ${cas.authn.jdbc.encode[0].sql}
+        fieldPassword: ${cas.authn.jdbc.encode[0].passwordFieldName}
+#指定过期字段，1为过期，若过期不可用
+        fieldExpired:
+        fieldDisabled: ${cas.authn.jdbc.encode[0].disabledFieldName}
+#数据库方言hibernate的知识
+        dialect: ${cas.authn.jdbc.encode[0].dialect}
+#数据库驱动
+        driverClass: ${cas.authn.jdbc.encode[0].driverClass}
+#数据库连接
+        url: ${datasource.url}
+#数据库用户名
+        user: ${datasource.user}
+#数据库密码
+        password: ${datasource.password}
+#默认加密策略，通过encodingAlgorithm来指定算法，默认NONE不加密
+        passwordEncoder:
+          type: DEFAULT
+#cas.authn.jdbc.query[0].passwordEncoder.type=org.springframework.security.authentication.encoding.Md5PasswordEncoder
+        characterEncoding: UTF-8
+        encodingAlgorithm: MD5
+      encode[0]:
+        numberOfIterations: 1024
+        saltFieldName: salt
+        sql: select * from user where phone=? and disabled=0
+        algorithmName: SHA1
+        passwordFieldName: password
+        disabledFieldName: disabled
+        url: ${datasource.url}
+        failFast: true
+        isolationLevelName: ISOLATION_READ_COMMITTED
+        dialect: org.hibernate.dialect.MySQL5Dialect
+        batchSize: 5
+        user: ${datasource.user}
+        ddlAuto: update
+        password: ${datasource.password}
+        driverClass: com.mysql.jdbc.Driver
+        dataSourceName: datasource
+        dataSourceProxy: true
+datasource:
+  url: jdbc:mysql://db.tembin.com:3306/tembin_member?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&useSSL=false
+  user: root
+  password: 11
+#redis.host=test.tembin.com
+#redis.port=6379
+#redis.database=7
+#env=test

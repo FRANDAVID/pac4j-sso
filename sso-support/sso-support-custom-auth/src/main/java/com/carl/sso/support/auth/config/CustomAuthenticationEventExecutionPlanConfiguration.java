@@ -7,6 +7,7 @@ package com.carl.sso.support.auth.config;
 
 import com.carl.sso.support.auth.handler.TembinPasswordAuthenticationHandler;
 import com.carl.sso.support.auth.handler.UsernamePasswordSystemAuthenticationHandler;
+import com.mysql.jdbc.Driver;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlan;
 import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
 import org.apereo.cas.authentication.AuthenticationHandler;
@@ -20,8 +21,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -43,9 +46,17 @@ public class CustomAuthenticationEventExecutionPlanConfiguration implements Auth
     @Autowired
     private CasConfigurationProperties casProperties;
     @Autowired
-    DataSource dataSource;
+    @Qualifier("mysqlDataSource")
+    private DataSource dataSource;
     @Value("${env}")
     private String env;
+
+    @Bean
+    public DataSource mysqlDataSource() throws SQLException{
+        JdbcAuthenticationProperties.Encode encode=casProperties.getAuthn().getJdbc().getEncode().get(0);
+        SimpleDriverDataSource dataSource = new SimpleDriverDataSource(new Driver(),encode.getUrl(),encode.getUser(),encode.getPassword());
+        return dataSource;
+    }
 
     /**
      * @description 一个AuthenticationEventExecutionPlanConfigurer注入多个handler,需要用集合,每个AuthenticationHandler都使用@bean的卡,启动会卡住
@@ -75,7 +86,7 @@ public class CustomAuthenticationEventExecutionPlanConfiguration implements Auth
 
 //    @Bean
     public AuthenticationHandler tembinPasswordAuthenticationHandler() {
-        JdbcAuthenticationProperties.Encode encode=casProperties.getAuthn().getJdbc().getEncode().get(1);
+        JdbcAuthenticationProperties.Encode encode=casProperties.getAuthn().getJdbc().getEncode().get(0);
         AuthenticationHandler handler = new TembinPasswordAuthenticationHandler("tembinAuthenticationHandler",
                 servicesManager, jdbcPrincipalFactory, 10,dataSource,encode,env);
         return handler;
