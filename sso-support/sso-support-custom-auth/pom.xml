@@ -29,5 +29,25 @@
             <version>${cas.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--jdbc认证-->
+        <dependency>
+            <groupId>org.apereo.cas</groupId>
+            <artifactId>cas-server-support-jdbc</artifactId>
+            <version>${cas.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.44</version>
+        </dependency>
+
+        <!--若不想找驱动可以直接写下面的依赖即可，其中包括HSQLDB、Oracle、MYSQL、PostgreSQL、MariaDB、Microsoft SQL Server-->
+        <!--<dependency>-->
+            <!--<groupId>org.apereo.cas</groupId>-->
+            <!--<artifactId>cas-server-support-jdbc-drivers</artifactId>-->
+            <!--<version>${cas.version}</version>-->
+        <!--</dependency>-->
+
     </dependencies>
 </project>

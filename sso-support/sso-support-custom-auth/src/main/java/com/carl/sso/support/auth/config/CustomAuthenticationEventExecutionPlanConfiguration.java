@@ -12,13 +12,16 @@ import org.apereo.cas.authentication.AuthenticationEventExecutionPlanConfigurer;
 import org.apereo.cas.authentication.AuthenticationHandler;
 import org.apereo.cas.authentication.principal.PrincipalFactory;
 import org.apereo.cas.configuration.CasConfigurationProperties;
+import org.apereo.cas.configuration.model.support.jdbc.JdbcAuthenticationProperties;
 import org.apereo.cas.services.ServicesManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -30,13 +33,19 @@ import java.util.HashSet;
 @Configuration("customAuthenticationEventExecutionPlanConfiguration")
 @EnableConfigurationProperties(CasConfigurationProperties.class)
 public class CustomAuthenticationEventExecutionPlanConfiguration implements AuthenticationEventExecutionPlanConfigurer {
+
     @Autowired
     @Qualifier("servicesManager")
     private ServicesManager servicesManager;
-
     @Autowired
     @Qualifier("jdbcPrincipalFactory")
     public PrincipalFactory jdbcPrincipalFactory;
+    @Autowired
+    private CasConfigurationProperties casProperties;
+    @Autowired
+    DataSource dataSource;
+    @Value("${env}")
+    private String env;
 
     /**
      * @description 一个AuthenticationEventExecutionPlanConfigurer注入多个handler,需要用集合,每个AuthenticationHandler都使用@bean的卡,启动会卡住
@@ -44,16 +53,10 @@ public class CustomAuthenticationEventExecutionPlanConfiguration implements Auth
      * @date 2019-01-26
      */
     @Bean
-    public Collection<AuthenticationHandler> sssAuthenticationHandlers() {
+    public Collection<AuthenticationHandler> diyAuthenticationHandlers() {
         Collection<AuthenticationHandler> handlers = new HashSet<>();
-
-        AuthenticationHandler customAuthenticationHandler = new UsernamePasswordSystemAuthenticationHandler("customAuthenticationHandler",
-                servicesManager, jdbcPrincipalFactory, 1); //优先验证
-        AuthenticationHandler tembinPasswordAuthenticationHandler = new TembinPasswordAuthenticationHandler("tembinAuthenticationHandler",
-                servicesManager, jdbcPrincipalFactory, 10);
-
-        handlers.add(customAuthenticationHandler);
-        handlers.add(tembinPasswordAuthenticationHandler);
+        handlers.add(customAuthenticationHandler());
+        handlers.add(tembinPasswordAuthenticationHandler());
         return handlers;
     }
 
@@ -62,23 +65,26 @@ public class CustomAuthenticationEventExecutionPlanConfiguration implements Auth
      *
      * @return
      */
-////    @Bean
-//    public AuthenticationHandler customAuthenticationHandler() {
-//        //优先验证
-//        return new UsernamePasswordSystemAuthenticationHandler("customAuthenticationHandler",
-//                servicesManager, jdbcPrincipalFactory, 1);
-//    }
-//
-////    @Bean
-//    public AuthenticationHandler tembinPasswordAuthenticationHandler() {
-//        return new TembinPasswordAuthenticationHandler("tembinAuthenticationHandler",
-//                servicesManager, jdbcPrincipalFactory, 10);
-//    }
+//    @Bean
+    public AuthenticationHandler customAuthenticationHandler() {
+        //优先验证,order=1
+        AuthenticationHandler handler = new UsernamePasswordSystemAuthenticationHandler(
+                "customAuthenticationHandler", servicesManager, jdbcPrincipalFactory, 1);
+        return handler;
+    }
+
+//    @Bean
+    public AuthenticationHandler tembinPasswordAuthenticationHandler() {
+        JdbcAuthenticationProperties.Encode encode=casProperties.getAuthn().getJdbc().getEncode().get(1);
+        AuthenticationHandler handler = new TembinPasswordAuthenticationHandler("tembinAuthenticationHandler",
+                servicesManager, jdbcPrincipalFactory, 10,dataSource,encode,env);
+        return handler;
+    }
 
     //注册自定义认证器
     @Override
     public void configureAuthenticationExecutionPlan(final AuthenticationEventExecutionPlan plan) {
-        CustomAuthenticationEventExecutionPlanConfiguration.this.sssAuthenticationHandlers().forEach((h) -> {
+        CustomAuthenticationEventExecutionPlanConfiguration.this.diyAuthenticationHandlers().forEach((h) -> {
             plan.registerAuthenticationHandler(h);
         });
 //        plan.registerAuthenticationHandler(customAuthenticationHandler());
