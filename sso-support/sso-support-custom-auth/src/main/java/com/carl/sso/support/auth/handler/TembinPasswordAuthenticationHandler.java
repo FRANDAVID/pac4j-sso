@@ -43,8 +43,7 @@ public class TembinPasswordAuthenticationHandler extends QueryAndEncodeDatabaseA
         }catch (Exception e){
 
         }
-
-        return createHandlerResult(credential, this.principalFactory.createPrincipal(((UsernamePasswordSysCredential) credential).getUsername(), Collections.emptyMap()), null);
+        return createHandlerResult(credential, this.principalFactory.createPrincipal(pwdCredential.getUsername()), null);
 
     }
 
