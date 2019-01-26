@@ -1,0 +1,14 @@
+https://blog.csdn.net/u010475041/article/details/77931867
+
+keytool -genkeypair -keyalg RSA -keysize 2048 -sigalg SHA1withRSA -validity 36500 -alias passport.sso.com -keystore d:/tomcat.keystore -dname "CN=passport.sso.com,OU=kawhi,O=carl,L=GuangZhou,ST=GuangDong,C=CN"
+
+keytool -exportcert -alias passport.sso.com -keystore d:/tomcat.keystore  -file d:/tomcat.cer -rfc
+
+#引号,这里输入密码:changeit,使用管理员权限
+keytool -import -alias passport.sso.com -keystore "%JAVA_HOME%\jre\lib\security\cacerts" -file d:/tomcat.cer -trustcacerts
+
+#检查
+keytool -list -keystore "%JAVA_HOME%\jre\lib\security\cacerts" | findstr/i server
+
+
+git记录 2017-11-11 at 11:23 由https转成http（仍支持单点登录）
